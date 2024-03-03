@@ -1,12 +1,27 @@
-# COVID-INSIGHTS-MEDICAL-IMAGES-ANALYSIS
-**Project Description:**
+# COVID-19 Data Analysis and CT Scan Image Analysis
 
-This project combines Python programming with PyQt5-based graphical user interface (GUI) development, data analysis, and visualization techniques. It encompasses two main areas: COVID-19 data analysis and CT scan image analysis.
+This project amalgamates Python programming, PyQt5-based GUI development, and data analysis techniques to explore COVID-19 trends and analyze CT scan images.
 
-**COVID-19 Data Analysis:**
+## Introduction:
 
-Utilizing libraries such as Pandas, Matplotlib, and requests, the project offers insights into the global and country-wise trends of COVID-19 cases, deaths, and recoveries. Additionally, it integrates blood test data analysis to investigate the impact of COVID-19 on various blood parameters.
+COVID-19 Data Analysis:
+The project employs Pandas, Matplotlib, and requests libraries to analyze global and country-wise COVID-19 data. It includes blood test data analysis to understand the virus's impact on various blood parameters.
 
-**CT Scan Image Analysis:**
+CT Scan Image Analysis:
+Utilizing OpenCV, NumPy, and SciPy libraries, the project processes CT scan images for medical analysis. It encompasses preprocessing, segmentation, feature extraction, and restoration techniques to diagnose and monitor medical conditions, including COVID-19-related abnormalities.
 
-The project utilizes Python libraries including OpenCV, NumPy, and SciPy for CT scan image analysis. This involves preprocessing CT scan images, performing image segmentation, feature extraction, and restoration techniques. The extracted information aids in diagnosing and monitoring various medical conditions, including COVID-19-related lung abnormalities.
+## Libraries Used:
+
+- PyQt5: Facilitates GUI development for intuitive user interaction.
+- Pandas: For efficient data manipulation and analysis.
+- Matplotlib: Enables the creation of insightful visualizations.
+- OpenCV: Provides image processing capabilities for CT scan analysis.
+- NumPy: Supports numerical operations and array manipulation.
+- SciPy: Offers scientific computing functionalities for advanced analysis.
+
+## Installation:
+
+Ensure Python is installed on your system. Install dependencies using pip:
+
+```bash
+pip install PyQt5 pandas matplotlib opencv-python numpy scipy
