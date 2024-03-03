@@ -25,4 +25,3 @@ Ensure Python is installed on your system. Install dependencies using pip:
 
 ```bash
 pip install PyQt5 pandas matplotlib opencv-python numpy scipy
-![example](https://github.com/baqar61/COVID-INSIGHTS-MEDICAL-IMAGES-ANALYSIS/blob/c45697183953f846717419e2e33a9cddfeafe520/13.png)
