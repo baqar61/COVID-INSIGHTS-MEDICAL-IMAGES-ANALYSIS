@@ -1,0 +1,935 @@
+import os, sys, math, pdb
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtCore import *
+from PyQt5.QtGui import QColor, QIcon
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox, QWidget
+from PyQt5.uic import loadUi
+
+from matplotlib.backends.backend_qt5agg import (NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.backends.backend_qt5agg import FigureCanvas
+from matplotlib.figure import Figure
+from PyQt5.QtWidgets import QAbstractItemView
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget,
+  QDialog, QLabel, QVBoxLayout, QPushButton, QDialogButtonBox,
+  QFormLayout, QLineEdit,QListWidget)
+
+
+# import numpy as np
+# from numpy import *
+#from scipy import signal
+from combine import Ui_MainWindow
+import json
+import requests
+import pandas as pd
+from matplotlib import pyplot as plt
+import cv2 
+import numpy as np
+import scipy as sp
+import scipy.ndimage
+from PyQt5.QtCore import QDir
+import matplotlib.dates as mdates
+
+
+
+
+
+b_canvas1 = False
+fig1 = ""
+
+b_canvas = False
+fig = ""
+
+class MyMainWindow(QMainWindow, Ui_MainWindow):
+    def __init__(self, parent=None):
+        super(MyMainWindow, self).__init__(parent)
+        QMainWindow.__init__(self, parent)
+
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        self.setStyleSheet("background-color: #344955;")
+        item       = ['US','Brazil','India','Russia','South Africa','Mexico','Peru','Chile','Colombia','Spain','Iran','UK','Saudi Arabia','Pakistan','Bangladesh','Italy','Turkey','Argentina','Germany'
+                     ,'France','Iraq','Philippines','Indonesia','Canada','Qatar','Kazakhstan','Egypt','Ecuador','Bolivia','Sweden','Oman','Israel',
+                     'Ukraine','Dominican Republic','Panama','Belgium','Kuwait','Belarus','UAE','Romania','Netherlands','Singapore','Guatemala','Portugal',
+                     'Poland','Nigeria','Honduras','Bahrain','Japan','Armenia','Ghana','Kyrgyzstan','Afghanistan','Switzerland','Algeria','Azerbaijan',
+                     'Morocco','Uzbekistan','Serbia','Moldova','Ireland','Kenya','Venezuela','Nepal','Austria','Costa Rica','Ethiopia','Australia',
+                     'El Salvador','Czechia','Cameroon','Ivory Coast','S. Korea','Denmark','Palestine','Bosnia and Herzegovina','Bulgaria','Madagascar',
+                     'Sudan','North Macedonia','Senegal','Norway','DRC','Malaysia','French Guiana','Gabon','Tajikistan','Guinea','Haiti','Finland','Zambia',
+                     'Luxembourg','Mauritania','Paraguay','Albania','Lebanon','Croatia','Djibouti','Greece','Libya','Equatorial Guinea','Maldives','CAR',
+                     'Hungary','Malawi','Zimbabwe','Nicaragua','Hong Kong','Congo','Montenegro','Thailand','Somalia','Mayotte','Eswatini','Sri Lanka','Cuba',
+                     'Cabo Verde','Namibia','Mali','Slovakia','South Sudan','Slovenia','Lithuania','Estonia','Mozambique','Rwanda','Suriname','Guinea-Bissau',
+                     'Benin','Iceland','Sierra Leone','Yemen','Tunisia','New Zealand','Angola','Uruguay','Latvia','Jordan','Liberia','Uganda','Cyprus','Georgia',
+                     'Burkina Faso','Niger','Togo','Syria','Jamaica','Malta','Andorra','Chad','Gambia','Sao Tome and Principe','Botswana','Bahamas','Vietnam','Lesotho',
+                     'Diamond Princess','San Marino','RÃ©union','Channel Islands','Guyana','Tanzania','Taiwan','Comoros','Burundi','Myanmar','Mauritius',
+                     'Isle of Man','Mongolia','Eritrea','Guadeloupe','Martinique','Faeroe Islands','Aruba','Cambodia','Trinidad and Tobago','Cayman Islands',
+                     'Gibraltar','Papua New Guinea','Sint Maarten','Bermuda','Brunei','Barbados','Turks and Caicos','Seychelles','Monaco','Bhutan','Antigua and Barbuda',
+                     'Liechtenstein','Belize','French Polynesia','St. Vincent Grenadines','Saint Martin','Macao','CuraÃ§ao','Fiji','Saint Lucia','Timor-Leste','Grenada',
+                     'New Caledonia','Laos','Dominica','Saint Kitts and Nevis','Greenland','Montserrat','Caribbean Netherlands','Falkland Islands','Vatican City','Western Sahara']
+        
+        
+        self.ui.listWidget.addItems(item)
+        
+
+
+        self.ui.plot.clicked.connect(self.show_graph)
+        self.ui.plot.setStyleSheet('background-color: #F9AA33;color: white;')
+        #self.ui.plot.setStyleSheet('QPushButton {background-color: #A3C1DA; color: red;}')
+        self.ui.bar.clicked.connect(self.show_graph1)
+        self.ui.bar.setStyleSheet('background-color: #F9AA33;color: white;')
+        self.ui.scatter.clicked.connect(self.show_graph2)
+        self.ui.scatter.setStyleSheet('background-color: #F9AA33;color: white;')
+        self.ui.pie.clicked.connect(self.show_graph3)
+        self.ui.pie.setStyleSheet('background-color: #F9AA33;color: white;')
+        self.ui.plot_2.clicked.connect(self.show1_graph1)
+        self.ui.plot_2.setStyleSheet('background-color: #F9AA33;color: white;')
+        # self.ui.bar_2.clicked.connect(self.show2_graph2)
+        # self.ui.scatter_2.clicked.connect(self.show3_graph3)
+        self.ui.pie_2.clicked.connect(self.show4_graph4)
+        self.ui.pie_2.setStyleSheet('background-color: #F9AA33;color: white;')
+        self.ui.pushButton.clicked.connect(self.open_image)
+        self.ui.pushButton.setStyleSheet('background-color: #F9AA33;color: white;')
+        self.ui.pushButton_2.clicked.connect(self.blood_data)
+        self.ui.pushButton_2.setStyleSheet('background-color: #F9AA33;color: white;')
+        self.ui.pushButton_3.clicked.connect(self.highest_cases)
+        self.ui.pushButton_3.setStyleSheet('background-color: #F9AA33;color: white;')
+        self.ui.plot_blood_data.clicked.connect(self.line_plot_blood_data)
+        self.ui.plot_blood_data.setStyleSheet('background-color: #F9AA33;color: white;')
+        
+        self.ui.linear.clicked.connect(self.linear_regression)
+        self.ui.linear.setStyleSheet('background-color: #F9AA33;color: white;')
+        
+        self.ui.comboBox_2.setStyleSheet('color: white;')
+        self.ui.comboBox_5.setStyleSheet('color: white;')
+        self.ui.comboBox_4.setStyleSheet('color: white;')
+        self.ui.comboBox.setStyleSheet('color: white;')
+        
+        #self.ui.comboBox_3.setEditable(False)
+
+        # Set the selection mode to allow multiple selection
+        #self.ui.comboBox_3.setSelectionMode(self.MultiSelection)
+        
+        
+        self.ui.Histogram.setStyleSheet('color: #F9AA33;')
+        self.ui.Flood_Fill.setStyleSheet('color: #F9AA33;')
+        self.ui.Thresholding.setStyleSheet('color: #F9AA33;')
+        self.ui.ROI.setStyleSheet('color: #F9AA33;')
+        self.ui.Canny.setStyleSheet('color: #F9AA33;')
+        self.ui.lesion.setStyleSheet('color: #F9AA33;')
+        self.ui.contrast.setStyleSheet('color: #F9AA33;')
+        self.ui.dial.setStyleSheet('background-color: #F9AA33;')
+        
+        self.ui.label_7.setStyleSheet('color: white;')
+        self.ui.label_9.setStyleSheet('color: white;')
+        self.ui.label_19.setStyleSheet('color: white;')
+        self.ui.label_18.setStyleSheet('color: white;')
+        self.ui.label_11.setStyleSheet('color: white;')
+        
+        self.ui.label.setStyleSheet('color: #F9AA33;')
+        self.ui.label_10.setStyleSheet('color: #F9AA33;')
+        self.ui.label_13.setStyleSheet('color: white;')
+        self.ui.label_14.setStyleSheet('color: #F9AA33;')
+        self.ui.label_15.setStyleSheet('color: #F9AA33;')
+        self.ui.label_16.setStyleSheet('color: #F9AA33;')
+        self.ui.label_17.setStyleSheet('color: #F9AA33;')
+        self.ui.label_2.setStyleSheet('color: white;')
+        self.ui.label_3.setStyleSheet('color: white;')
+        self.ui.label_4.setStyleSheet('color: #F9AA33;')
+        self.ui.label_5.setStyleSheet('color: #F9AA33;')
+        self.ui.label_6.setStyleSheet('color: #F9AA33;')
+        self.ui.label_8.setStyleSheet('color: white;')
+        
+        self.ui.menubar.setStyleSheet('color: #F9AA33;')
+        
+        self.ui.dial.setRange(20, 255)
+        self.ui.dial.setSingleStep(10)
+        
+        self.ui.slider.setRange(20, 255)
+        self.ui.slider.setSingleStep(10)
+        
+        
+        
+        
+
+        self.ui.dial.valueChanged.connect(self.value_changed)
+        
+        self.ui.slider.valueChanged.connect(self.value_changed1)
+        self.ui.slider2.valueChanged.connect(self.contrast_change)
+        #self.ui.Thresholding.toggled.connect(self.value_changed)
+        self.ui.listWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.ui.listWidget.setStyleSheet('color: white;')
+        self.ui.lineEdit.setText("10")
+        self.ui.lineEdit.setStyleSheet('color: white;')
+        
+        self.ui.actionAbout_Medical_Image_Analysis.triggered.connect(self.LaunchPopup)
+        self.ui.actionAbout_Covid_Data_Analysis.triggered.connect(self.LaunchPopup1)
+        
+      
+        #self.ui.dial.rangeChanged.connect(self.selection_changed)
+        #**************************************************************************************
+        #Help widget 
+        
+        #**************************************************************************************
+    def LaunchPopup(self):
+        
+        
+        
+        pop=Popup(self)
+        pop.show()
+        
+    def LaunchPopup1(self):
+        
+        
+        
+        pop1=Popup1(self)
+        pop1.show()
+        
+        #**************************************************************************************
+        #INDIAN COVID CASES STATE WISE
+        
+        #**************************************************************************************  
+      
+    def show_graph(self):
+        global fig1
+        if b_canvas1 == True:
+            self.rm_mpl1()
+        
+        content = self.ui.comboBox_2.currentText()   
+        
+        columns = ["State",str(content)]
+        df = pd.read_csv("statewise_data_with_new_cases.csv", usecols=columns)
+        tick=df.State
+        fig1 = Figure()
+        
+        ax1f1 = fig1.add_subplot(111)
+        ax1f1.figsize=(12,12)
+        ax1f1.plot(df.State,df[str(content)],color='blue',
+        marker='o',
+        linewidth=2,
+        markersize=10,
+        markeredgecolor='red')
+        ax1f1.set_facecolor("black")
+        ax1f1.set_xticklabels(tick, rotation =90)
+        ax1f1.grid(linewidth=0.1,color='#FFA500')
+        ax1f1.set_ylabel(str(content))
+            
+        self.add_mpl1(fig1)
+
+    def show_graph1(self):
+        global fig1
+        if b_canvas1 == True:
+            self.rm_mpl1()
+        content = self.ui.comboBox_2.currentText()   
+
+        columns = ["State",str(content)]
+        df = pd.read_csv("statewise_data_with_new_cases.csv", usecols=columns)
+        tick=df.State
+        fig1 = Figure()
+        ax1f1 = fig1.add_subplot(111)
+        ax1f1.figsize=(12,12)
+        ax1f1.bar(df.State,df[str(content)],color='blue')
+        ax1f1.set_facecolor("black")
+        ax1f1.set_xticklabels(tick, rotation =90)
+        ax1f1.set_ylabel(str(content))
+        self.add_mpl1(fig1)
+
+    def show_graph2(self):
+        global fig1
+        if b_canvas1 == True:
+            self.rm_mpl1()
+        
+        
+        content = self.ui.comboBox_2.currentText()   
+
+        columns = ["State",str(content)]
+        df = pd.read_csv("statewise_data_with_new_cases.csv", usecols=columns)
+        tick=df.State
+        fig1 = Figure()
+        ax1f1 = fig1.add_subplot(111)
+        ax1f1.figsize=(12,12)
+        ax1f1.scatter(df.State,df[str(content)],c='blue')
+        # Use the annotate() method to add text labels to each scatter point
+        for i, txt in enumerate(df[str(content)]):
+            ax1f1.annotate(txt, (df.State[i], df[str(content)][i]))
+            
+        ax1f1.set_xticklabels(tick, rotation =90)
+        ax1f1.set_ylabel(str(content))
+        self.add_mpl1(fig1)
+        
+    def show_graph3(self):
+        global fig1
+        if b_canvas1 == True:
+            self.rm_mpl1()
+            columns = ["Active", "Confirmed","Deaths","Cured"]
+            df = pd.read_csv("statewise_data_with_new_cases.csv", usecols=columns)
+            mean1 = df['Confirmed'].mean()
+            mean2 = df['Active'].mean()
+            mean3 = df['Deaths'].mean()
+            mean4 = df['Cured'].mean()
+            values=[mean1,mean2,mean3,mean4]
+            labels=['Confirmed','Active','Cured','Deaths']
+            fig1 = Figure()
+            ax1f1 = fig1.add_subplot(111)
+            ax1f1.pie(values,labels=labels,autopct='%1.1f%%',shadow=True, startangle=90)
+            ax1f1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+            self.add_mpl1(fig1)
+            
+        #**************************************************************************************
+        #WORLD WIDE COVID DATA COUNTRY WISE
+        
+        #**************************************************************************************
+    def show1_graph1(self):
+        global fig1
+        if b_canvas1 == True:
+            self.rm_mpl1()
+       
+        selected_items =self.ui.listWidget.selectedItems()
+        # Get the names of the selected countries from the list of items
+        content1 = [item.text() for item in selected_items]
+        print(content1)
+
+        content2= self.ui.comboBox_5.currentText()
+        # Read the CSV file into a DataFrame object
+        
+        rows = pd.read_csv("full_grouped.csv", parse_dates=['Date'])
+
+        fig1 = Figure()
+        ax = fig1.add_subplot(111)
+        for country in content1:
+                country_rows = rows[rows["Country/Region"] == country]
+                min_date = min(country_rows["Date"])
+                max_date = max(country_rows["Date"])
+                ax.plot(country_rows["Date"],country_rows[str(content2)], label=country,
+                marker='o',
+                linewidth=2,
+                markersize=7)
+                ax.set_xlim(min_date, max_date)
+                ax.xaxis.set_major_locator(mdates.MonthLocator())
+                ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+                fig1.autofmt_xdate()
+            
+        ax.legend()
+        ax.set_facecolor("black")
+        ax.set_xlabel('Date')
+        ax.set_ylabel(str(content2))
+        self.add_mpl1(fig1)
+
+    
+    def linear_regression(self):
+        global fig1
+        if b_canvas1 == True:
+            self.rm_mpl1()
+       
+        selected_items =self.ui.listWidget.selectedItems()
+        # Get the names of the selected countries from the list of items
+        content1 = [item.text() for item in selected_items]
+        print(content1)
+
+        content2= self.ui.comboBox_5.currentText()
+        # Read the CSV file into a DataFrame object
+        df = pd.read_csv("full_grouped.csv")
+
+        # Select the rows with the same name
+        rows = df[df["Country/Region"].isin(content1)].sort_values("Date")
+    
+                
+        fig1 = Figure()
+        ax = fig1.add_subplot(111)
+        for country in content1:
+                country_rows = rows[rows["Country/Region"] == country]
+                print(country_rows)
+                
+                x=country_rows["New cases"]
+                y=country_rows[str(content2)]
+                n=np.size(x)
+                  
+                x_mean = np.mean(x)
+                y_mean = np.mean(y)
+                x_mean,y_mean
+                  
+                Sxy = np.sum(x*y)- n*x_mean*y_mean
+                Sxx = np.sum(x*x)-n*x_mean*x_mean
+                  
+                b1 = Sxy/Sxx
+                b0 = y_mean-b1*x_mean
+                print('slope b1 is', b1)
+                print('intercept b0 is', b0)
+                  
+   
+
+                y_pred = b1 * x + b0
+                  
+                ax.scatter(x, y, color = 'red')
+                ax.plot(x, y_pred, color = 'green')
+                ax.set_xlabel(str(content2))
+                ax.set_ylabel('Total Cases')
+                
+ 
+        ax.set_facecolor("black")
+        self.add_mpl1(fig1)
+        
+
+    def show4_graph4(self):
+        global fig1
+        if b_canvas1 == True:
+            self.rm_mpl1()
+        selected_items =self.ui.listWidget.selectedItems()
+        # Get the names of the selected countries from the list of items
+        content1 = [item.text() for item in selected_items]
+        print(content1)
+
+        # Read the CSV file into a DataFrame object
+        df = pd.read_csv("full_grouped.csv")
+
+        # Select the rows with the same name
+        rows = df[df["Country/Region"].isin(content1)].sort_values("Date")
+         
+        fig1 = Figure()
+        ax = fig1.add_subplot(111)
+        for country in content1:
+            country_rows = rows[rows["Country/Region"] == country]
+            mean1 = country_rows['Confirmed'].sum()
+            mean3 = country_rows['Deaths'].sum()
+            mean4 = country_rows['Recovered'].sum()
+            values=[mean1,mean3,mean4]
+            labels=['Confirmed','Recovered','Deaths']
+            
+            ax.pie(values,labels=labels,autopct='%1.1f%%',shadow=True, startangle=90)
+
+        self.add_mpl1(fig1)
+        
+        #**************************************************************************************
+        #COUNTRIES WITH HIGHEST COVID CASES 
+        
+        #**************************************************************************************
+    def highest_cases(self):
+        global fig1
+        if b_canvas1 == True:
+            self.rm_mpl1()
+        
+        self.ui.lineEdit.setReadOnly(False)
+        text = self.ui.lineEdit.text()
+        df = pd.read_csv('country_wise_latest.csv')
+        x_col = 'Country/Region'
+        y_col = 'Confirmed'
+        df = df.sort_values(by=y_col, ascending=False)
+        fig1 = Figure()
+        ax = fig1.add_subplot(111)
+        ax.set_facecolor("black")
+        ax.set_ylabel('Confirmed')
+        
+        top_20 = df.head(int(text))
+        top_20.plot(kind='bar', x=x_col, y=y_col,ax=ax)
+        
+
+        self.add_mpl1(fig1)
+        
+        #**************************************************************************************
+        #BLOOD DATA OF COVID PATIENTS
+        
+        #**************************************************************************************
+        
+    def blood_data(self):
+        global fig1
+        if b_canvas1== True:
+            self.rm_mpl1()
+        cont=self.ui.comboBox.currentText()
+        cont1=self.ui.comboBox_4.currentText()
+        if cont1=='outcome':
+            if b_canvas1== True:
+                self.rm_mpl1()
+            df = pd.read_csv("COVID-19_CBC_Data.csv")
+            rows = df.loc[df["Outcome"] == "Recovered"]
+            rows1 = df.loc[df["Outcome"] == "Not Recovered"]
+            print(rows)
+            tick=rows['Discharge_DATE or date of Death']
+            fig1 = Figure()
+            ax = fig1.add_subplot(111)
+            ax.set_facecolor("black")
+            rows.plot.scatter(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='green')
+            rows1.plot.scatter(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='red')
+            ax.legend([str(cont)+' of Recovered',str(cont)+' of Not Recovered'])
+            ax.set_xticklabels(tick, rotation =45)
+            
+                    
+            self.add_mpl1(fig1)
+        elif cont1=='gender':
+            if b_canvas1== True:
+                self.rm_mpl1()
+            df = pd.read_csv("COVID-19_CBC_Data.csv")
+            rows = df.loc[df["Gender"] == "Male"]
+            rows1 = df.loc[df["Gender"] == "Female"]
+            tick=rows['Discharge_DATE or date of Death']
+            fig1 = Figure()
+            ax = fig1.add_subplot(111)
+            ax.set_facecolor("black")
+            rows1.plot.scatter(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='red')
+            rows.plot.scatter(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='green')
+            ax.legend([str(cont)+' of Female',str(cont)+' of Male'])
+            ax.set_xticklabels(tick, rotation =45)
+                    
+            self.add_mpl1(fig1)
+
+        elif cont1=='ventilated (Y/N)':
+            if b_canvas1== True:
+                self.rm_mpl1()
+            df = pd.read_csv("COVID-19_CBC_Data.csv")
+            rows = df.loc[df["Ventilated (Y/N)"] == "Yes"]
+            rows1 = df.loc[df["Ventilated (Y/N)"] == "No"]
+            tick=rows['Discharge_DATE or date of Death']
+            fig1 = Figure()
+            ax = fig1.add_subplot(111)
+            ax.set_facecolor("black")
+            rows1.plot.scatter(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='green')
+            rows.plot.scatter(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='red')
+            ax.legend([str(cont)+' of Not Ventilated',str(cont)+' of Ventilated'])
+            ax.set_xticklabels(tick, rotation =45)
+                    
+            self.add_mpl1(fig1)
+    def line_plot_blood_data(self):
+        global fig1
+        if b_canvas1== True:
+            self.rm_mpl1()
+        cont=self.ui.comboBox.currentText()
+        cont1=self.ui.comboBox_4.currentText()
+        if cont1=='outcome':
+            if b_canvas1== True:
+                self.rm_mpl1()
+            df = pd.read_csv("COVID-19_CBC_Data.csv")
+            rows = df.loc[df["Outcome"] == "Recovered"]
+            rows1 = df.loc[df["Outcome"] == "Not Recovered"]
+            fig1 = Figure()
+            ax = fig1.add_subplot(111)
+            ax.set_facecolor("black")
+            rows1.plot(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='red',marker='*',
+            linewidth=2,
+            markersize=10)
+            rows.plot(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='green',marker='o',
+            linewidth=2,
+            markersize=7)
+            ax.legend([str(cont)+' of Not Recovered',str(cont)+' of Recovered'])
+            ax.grid(linewidth=0.1,color='#FFA500')
+            ax.set_ylabel(str(cont))
+            #ax.set_xticklabels(tick, rotation =45)
+            
+                    
+            self.add_mpl1(fig1)
+        elif cont1=='gender':
+            if b_canvas1== True:
+                self.rm_mpl1()
+            df = pd.read_csv("COVID-19_CBC_Data.csv")
+            rows = df.loc[df["Gender"] == "Male"]
+            rows1 = df.loc[df["Gender"] == "Female"]
+          
+            fig1 = Figure()
+            ax = fig1.add_subplot(111)
+            ax.set_facecolor("black")
+            rows1.plot(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='red',marker='*',
+            linewidth=2,
+            markersize=10)
+            rows.plot(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='green',marker='o',
+            linewidth=2,
+            markersize=7)
+            ax.legend([str(cont)+' of Female',str(cont)+' of Male'])
+            ax.grid(linewidth=0.1,color='#FFA500')
+            ax.set_ylabel(str(cont))
+        
+                    
+            self.add_mpl1(fig1)
+
+        elif cont1=='ventilated (Y/N)':
+            if b_canvas1== True:
+                self.rm_mpl1()
+            df = pd.read_csv("COVID-19_CBC_Data.csv")
+            rows = df.loc[df["Ventilated (Y/N)"] == "Yes"]
+            rows1 = df.loc[df["Ventilated (Y/N)"] == "No"]
+           
+            fig1 = Figure()
+            ax = fig1.add_subplot(111)
+            ax.set_facecolor("black")
+            rows.plot(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='red',marker='*',
+            linewidth=2,
+            markersize=10)
+            rows1.plot(x='Discharge_DATE or date of Death',y=str(cont),ax=ax,c='green',marker='o',
+            linewidth=2,
+            markersize=7)
+            ax.legend([str(cont)+' of Ventilated',str(cont)+' of Not Ventilated'])
+            ax.grid(linewidth=0.1,color='#FFA500')
+            ax.set_ylabel(str(cont))
+            
+                    
+            self.add_mpl1(fig1)    
+            
+            
+            
+        #**************************************************************************************
+        #CT SCAN IMAGES ANALYSIS
+        
+        #**************************************************************************************
+    def setPixmap(self, *args, **kwargs):
+
+        super().setPixmap(*args, **kwargs)
+        self.setStyleSheet('''
+        QLabel {
+            border: none;
+        }''')
+
+        
+
+
+    def open_image(self, filename=None):
+        global fig
+        if b_canvas == True:
+            self.rm_mpl()
+        global file
+        if not filename:
+            filename, _ = QFileDialog.getOpenFileName(self, 'Select Photo', QDir.currentPath(), 'Images (*.png *.jpg)')
+            if not filename:
+                return
+        #self.photo.setPixmap(QPixmap(filename))
+       
+        file=filename
+        print(file)
+        
+        
+        
+        
+        if self.ui.Canny.isChecked()==True:
+            if b_canvas == True:
+                self.rm_mpl()
+     
+            img=cv2.imread(str(file))
+            img_gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            edged_image = cv2.Canny(img_gray1, threshold1=30, threshold2=100)
+           
+
+            fig = Figure()
+            ax1f1 = fig.add_subplot(121)
+            ax2f2 = fig.add_subplot(122)
+            ax1f1.imshow(img,cmap='gray')
+            ax2f2.imshow(edged_image,cmap='gray')
+            ax1f1.set_title('INPUT IMAGE',fontsize=20,color="blue")
+            ax2f2.set_title('Canny Edge Detection',fontsize=20,color="blue")
+            
+                
+            self.add_mpl(fig)
+            
+        elif self.ui.lesion.isChecked()==True:
+            if b_canvas == True:
+                self.rm_mpl()
+     
+            img=cv2.imread(str(file))
+            image=cv2.imread(str(file))
+            # Convert the image to grayscale
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+            # Apply thresholding to segment the lesions
+            ret, thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)
+
+            # Find the contours of the segmented lesions
+            contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+            # Draw the contours on the original image
+            cv2.drawContours(img, contours, -1, (0,255,0), 3)
+
+            fig = Figure()
+            ax1f1 = fig.add_subplot(121)
+            ax2f2 = fig.add_subplot(122)
+            ax1f1.imshow(image,cmap='gray')
+            ax2f2.imshow(img)
+            ax1f1.set_title('INPUT IMAGE',fontsize=20,color="blue")
+            ax2f2.set_title('Detected Lesions',fontsize=20,color="blue")
+            
+                
+            self.add_mpl(fig)
+
+
+       
+
+        
+        elif self.ui.Histogram.isChecked()==True:
+            
+            
+            if b_canvas == True:
+                self.rm_mpl()
+     
+            img=cv2.imread(str(file))
+                
+            
+            
+            hist = cv2.calcHist([img],[0],None,[255],[0,255])
+            plt.plot(hist)
+            plt.show()
+            #fig, (ax2f2, ax1f1) = plt.subplots(1, 2, figsize=(10, 8))
+            fig = Figure()
+            ax1f1 = fig.add_subplot(122)
+            ax2f2 = fig.add_subplot(121)
+            ax2f2.imshow(img,cmap='gray')
+            ax1f1.plot(hist)
+            ax2f2.set_title('INPUT IMAGE',fontsize=20,color="blue")
+            ax1f1.set_title('Histogram',fontsize=20,color="blue")
+            
+                
+            self.add_mpl(fig)
+        
+        elif self.ui.ROI.isChecked()==True:
+            
+            if b_canvas == True:
+                self.rm_mpl()
+                
+      
+            img=cv2.imread(str(file))
+            r = cv2.selectROI("select the area", img)
+     
+            # Crop image
+            cropped_image = img[int(r[1]):int(r[1]+r[3]),int(r[0]):int(r[0]+r[2])]
+            
+            threshold=150
+            ret1, bw_img1 = cv2.threshold(cropped_image, threshold, 255, cv2.THRESH_BINARY)
+              
+            fig = Figure()
+            ax1f1 = fig.add_subplot(122)
+            ax2f2 = fig.add_subplot(121)
+            ax2f2.imshow(img,cmap='gray')
+            ax1f1.imshow(bw_img1)
+            ax2f2.set_title('INPUT IMAGE',fontsize=20,color="blue")
+            ax1f1.set_title('Thresholding on ROI',fontsize=20,color="blue")
+           
+            self.add_mpl(fig)
+            
+        elif self.ui.Flood_Fill.isChecked()==True:
+        
+            if b_canvas == True:
+                self.rm_mpl()
+        
+        
+            img1=cv2.imread(str(file),0)
+            def flood_fill(test_array,h_max=100):
+                input_array = np.copy(test_array) 
+                el = sp.ndimage.generate_binary_structure(2,2).astype(np.int64)
+                inside_mask = sp.ndimage.binary_erosion(~np.isnan(input_array), structure=el)
+                output_array = np.copy(input_array)
+                output_array[inside_mask]=h_max
+                output_old_array = np.copy(input_array)
+                output_old_array.fill(0)   
+                el = sp.ndimage.generate_binary_structure(2,1).astype(np.int64)
+                while not np.array_equal(output_old_array, output_array):
+                    output_old_array = np.copy(output_array)
+                    output_array = np.maximum(input_array,sp.ndimage.grey_erosion(output_array, size=(3,3)))
+                return output_array
+
+
+            grey_fill=flood_fill(img1)
+            #diff=img1-grey_fill
+            fig = Figure()
+        
+            ax2f2=fig.add_subplot(122)
+            ax1f1 = fig.add_subplot(121)
+            ax1f1.imshow(img1,cmap='gray')
+            ax2f2.imshow(grey_fill,cmap='gray')
+            ax1f1.set_title('INPUT IMAGE',fontsize=20,color="blue")
+            ax2f2.set_title('Flood fill',fontsize=20,color="blue")
+            self.add_mpl(fig)
+        elif self.ui.Thresholding.isChecked()==True:
+            if b_canvas == True:
+                self.rm_mpl()
+            img2=cv2.imread(str(file))
+            _, roi = cv2.threshold(img2,20, 255, cv2.THRESH_BINARY)
+            
+            fig = Figure()
+            ax1f1 = fig.add_subplot(122)
+            ax2f2 = fig.add_subplot(121)
+            ax2f2.imshow(img2,cmap='gray')
+            ax1f1.imshow(roi,cmap='gray')
+            ax2f2.set_title('INPUT IMAGE',fontsize=20,color="blue") 
+            ax1f1.set_title('Thresholding',fontsize=20,color="blue")
+                     
+            self.add_mpl(fig)
+        elif self.ui.contrast.isChecked()==True:
+            if b_canvas == True:
+                self.rm_mpl()
+            
+            # Convert the image to a binary image using thresholding
+            # Load the CT scan image
+            image = cv2.imread(str(file), cv2.IMREAD_GRAYSCALE)
+            
+            # Define the minimum and maximum intensity values for the stretch
+            min_val = 0
+            max_val = 255
+            
+            # Perform contrast stretching
+            output = cv2.normalize(image, None, min_val, max_val, cv2.NORM_MINMAX)
+            
+            # Display the original and stretched images
+           
+            fig = Figure()
+            ax1f1 = fig.add_subplot(122)
+            ax2f2 = fig.add_subplot(121)
+            ax2f2.imshow(image,cmap='gray')
+            ax1f1.imshow(output,cmap='gray')
+            ax2f2.set_title('INPUT IMAGE',fontsize=20,color="blue") 
+            ax1f1.set_title('Contrast Stretching',fontsize=20,color="blue")
+            self.add_mpl(fig)
+    
+    def contrast_change(self,i):
+        global fig
+        if b_canvas == True:
+            self.rm_mpl()
+        if self.ui.contrast.isChecked()==True:
+        
+            # Convert the image to a binary image using thresholding
+            # Load the CT scan image
+            image = cv2.imread(str(file), cv2.IMREAD_GRAYSCALE)
+            
+            # Define the minimum and maximum intensity values for the stretch
+            min_val = 0
+            max_val = i
+            
+            # Perform contrast stretching
+            output = cv2.normalize(image, None, min_val, max_val, cv2.NORM_MINMAX)
+            
+            
+            ax1f1 = fig.add_subplot(122)
+            ax2f2 = fig.add_subplot(121)
+            ax2f2.imshow(image,cmap='gray')
+            ax1f1.imshow(output,cmap='gray')
+            ax2f2.set_title('INPUT IMAGE',fontsize=20,color="blue") 
+            ax1f1.set_title('Contrast Stretching',fontsize=20,color="blue")
+            self.add_mpl(fig)
+            
+
+    def value_changed(self,i):
+        
+        
+        global fig
+        if b_canvas == True:
+            self.rm_mpl()
+             
+        if self.ui.Thresholding.isChecked()==True:
+           
+            img2=cv2.imread(str(file))
+            
+            thresh=i
+            print(thresh)
+            self.ui.label_12.setText('Threshold='+str(thresh))
+                
+            # Apply thresholding to the ROI
+            #thresh=90
+            _, roi = cv2.threshold(img2,thresh, 255, cv2.THRESH_BINARY)
+            
+            fig = Figure()
+            ax1f1 = fig.add_subplot(122)
+            ax2f2 = fig.add_subplot(121)
+            ax2f2.imshow(img2,cmap='gray')
+            ax1f1.imshow(roi,cmap='gray')
+            ax2f2.set_title('INPUT IMAGE',fontsize=20,color="blue") 
+            ax1f1.set_title('Thresholding',fontsize=20,color="blue")
+                     
+            self.add_mpl(fig)
+    def value_changed1(self,j):
+        global fig
+        if b_canvas == True:
+            self.rm_mpl()
+        if self.ui.Canny.isChecked()==True:
+ 
+            img=cv2.imread(str(file))
+            img_gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            
+            th=j
+            edged_image = cv2.Canny(img_gray1, th, threshold2=100)
+           
+    
+            fig = Figure()
+            ax1f1 = fig.add_subplot(121)
+            ax2f2 = fig.add_subplot(122)
+            ax1f1.imshow(img,cmap='gray')
+            ax2f2.imshow(edged_image,cmap='gray')
+            ax1f1.set_title('INPUT IMAGE',fontsize=20,color="blue")
+            ax2f2.set_title('Canny Edge Detection',fontsize=20,color="blue")
+            
+                
+            self.add_mpl(fig)
+            
+
+         #**************************************************************************************
+         #PLOT ADDING AND REMOVING
+         
+         #**************************************************************************************       
+    
+    
+    def add_mpl1(self,fig1):
+            global b_canvas1
+            self.canvas1 = FigureCanvas(fig1)
+            self.ui.verticalLayout_2.addWidget(self.canvas1)
+            self.canvas1.draw()
+            
+            #pdb.set_trace()
+            
+            self.toolbar1 = NavigationToolbar(self.canvas1,self.ui.mplwindow_2, coordinates=True)
+            self.ui.verticalLayout_2.addWidget(self.toolbar1)
+            b_canvas1 = True
+            
+            
+            
+    def rm_mpl1(self,):
+            global b_canvas1,fig1
+            fig1.clear()
+            self.ui.verticalLayout_2.removeWidget(self.canvas1)
+            self.canvas1.close()
+            self.ui.verticalLayout_2.removeWidget(self.toolbar1)
+            self.toolbar1.close()
+            b_canvas1 = False
+            #pdb.set_trace()
+    def add_mpl(self,fig):
+            global b_canvas
+            self.canvas = FigureCanvas(fig)
+            self.ui.verticalLayout.addWidget(self.canvas)
+            self.canvas.draw()
+            
+            
+            
+            self.toolbar = NavigationToolbar(self.canvas,self.ui.mplwindow, coordinates=True)
+            self.ui.verticalLayout.addWidget(self.toolbar)
+            b_canvas = True
+            
+            
+    def rm_mpl(self,):
+            global b_canvas,fig
+            fig.clear()
+            self.ui.verticalLayout.removeWidget(self.canvas)
+            self.canvas.close()
+            self.ui.verticalLayout.removeWidget(self.toolbar)
+            self.toolbar.close()
+            b_canvas = False
+
+       #**************************************************************************************
+        #HELP WIDGET CREATION
+        
+        #**************************************************************************************
+        
+class Popup(QDialog):
+    def __init__(self,parent=None):
+        super().__init__(parent)
+        self.resize(600,600)
+        self.setStyleSheet('font-size:12px; color: white;')
+        label = QLabel(self)
+        label.setText('Medical Image Analysis:\nYou can check the different aspects of medical images.\nYou have to select first any aspect you want to observe (for example: Histogram)\nNow click on button "Open" to select the image.\nFor thresholding you can also change the threshold level by changing the\nthreshold using round radio button.')
+        self.setWindowTitle('Help')
+        label.setAlignment(Qt.AlignLeft)
+
+class Popup1(QDialog):
+    def __init__(self,parent=None):
+        super().__init__(parent)
+        self.resize(600,600)
+        self.setStyleSheet('font-size:12px; color: white;')
+        label = QLabel(self)
+        label.setText('Covid Data Analysis:\nYou can check the different aspects of Covid Data.\nYou have to select the button you want to observe (for example: PLOT)\nWhen plotting the linear regression plot or pie chart for countries select one country at a time')
+        self.setWindowTitle('Help')
+        label.setAlignment(Qt.AlignLeft)
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = MyMainWindow()
+    MainWindow.show()
+    sys.exit(app.exec_())
